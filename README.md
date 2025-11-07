@@ -36,11 +36,5 @@ This userscript adds quality of life updates to Jira interface for Customer Supp
 2. Create a new userscript and paste the code from `Jira for CSEs.user.js`.  
 3. Save and reload Jira pages.
 
----
-
-## Future Features To Add
-
-1. Add link to Help Center & Provisioning
-2. Add link to Cloud Console
 
 
