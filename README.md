@@ -1,7 +1,7 @@
 # Jira for CSEs – Userscript
 
-**Version:** 3.1  
-**Author:** Allison McGill
+**Version:** 3.2
+**Author:** Allison McGill, Rita Schaff, Daniel Martínez Cisneros
 
 ---
 
@@ -19,7 +19,8 @@ This userscript adds quality of life updates to Jira interface for Customer Supp
 
 ### 1. Status Colors
 - Different statuses now have different color backgrounds. 
-<img width="509" height="256" alt="image" src="https://github.com/user-attachments/assets/259df98d-7421-4ee4-8c6e-a97fa372244a" />
+<img width="624" height="1050" alt="image" src="https://github.com/user-attachments/assets/beaa9362-9e09-4392-b8dd-44a5b911c0f7" />
+" />
 
 ### 2. Patcher Link Field
 - Automatically adds a **Patcher portal link** in the details field.  

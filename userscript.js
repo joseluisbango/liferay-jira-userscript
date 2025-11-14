@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Jira For CSEs
-// @author       Ally, Rita
+// @author       Ally, Rita, Dmcisneros
 // @icon         https://www.liferay.com/o/classic-theme/images/favicon.ico
 // @namespace    https://liferay.atlassian.net/
 // @version      3.3
@@ -14,69 +14,48 @@
 (function() {
     'use strict';
 
-    /*********** STATUS COLORs ***********/
+    // Map of colors by normalized status (all lowercase, spaces removed)
     const statusColors = {
-        'New':               { bg: '#FFC0CB', text: '#800000' },
-        'New (FLS)':         { bg: '#FFC0CB', text: '#800000' },
-        'In Progress':       { bg: '#FFD6D6', text: '#B22222' },
-        'In Progress (FLS)': { bg: '#FFD6D6', text: '#B22222' },
-        'With Product Team': { bg: '#D6E4FF', text: '#1E40AF' },
-        'With SRE':          { bg: '#FFE0B2', text: '#BF5700' },
-        'Pending':           { bg: '#FFF3B0', text: '#A67C00' },
-        'Pending (FLS)':     { bg: '#FFF3B0', text: '#A67C00' },
-        'Solution Proposed': { bg: '#C8FACC', text: '#1F7A3D' },
-        'Solution Proposed (FLS)': { bg: '#C8FACC', text: '#1F7A3D' },
-        'Solution Accepted': { bg: '#C8FACC', text: '#1F7A3D' },
-        'Solution Accepted (FLS)': { bg: '#C8FACC', text: '#1F7A3D' },
-        'Closed (FLS)':      { bg: '#C8FACC', text: '#1F7A3D' },
-        'Closed':            { bg: '#C8FACC', text: '#1F7A3D' },
-        'Inactive':          { bg: '#C8FACC', text: '#1F7A3D' },
-        'Solved':            { bg: '#C8FACC', text: '#1F7A3D' },
-        'Resolved':          { bg: '#C8FACC', text: '#1F7A3D' },
-        'Completed':         { bg: '#C8FACC', text: '#1F7A3D' },
-        'Awaiting Help':     { bg: '#E2D6FF', text: '#5B2CA6' },
-        'Open':              { bg: '#A0E7E5', text: '#05696B' },
+        'pending': '#8fb8f6',
+        'awaitinghelp': '#d8a0f7',
+        'withproductteam': '#d8a0f7',
+        'withsre': '#d8a0f7',
+        'inprogress': '#fd9891',
+        'solutionproposed': '#FFEB3B',
+        'solutionaccepted': '#FFEB3B',
+        'closed': '#dddee1',
+        'inactive': '#FFEB3B',
+        'new': '#FFEB3B'
     };
 
-    function styleStatuses() {
-        ['_bfhk1ymo', '_bfhk1fkg', '_bfhk3uhp'].forEach(cls => {
-            document.querySelectorAll(`.${cls}`).forEach(el => {
-                el.style.setProperty('background', 'transparent', 'important');
-            });
-        });
+    // Normalize any status text (remove spaces, punctuation, lowercase)
+    function normalizeStatus(text) {
+        return text
+            .replace(/\s+/g, '')
+            .replace(/[^a-zA-Z]/g, '')
+            .toLowerCase();
+    }
 
-        document.querySelectorAll('span.jira-issue-status-lozenge').forEach(el => {
-            const statusText = el.textContent.trim();
-            const style = statusColors[statusText];
-            if (style) {
-                el.style.setProperty('background-color', style.bg, 'important');
-                el.style.setProperty('color', style.text, 'important');
+    // Apply colors dynamically
+    function applyColors() {
+        // Select both types of elements: dynamic class + data-testid containing "status"
+        const elements = document.querySelectorAll('._bfhk1ymo,.jira-issue-status-lozenge, [data-testid*="issue.fields.status.common.ui.status-lozenge.3"]');
+
+        elements.forEach(el => {
+            const rawText = (el.innerText || el.textContent || '').trim();
+            const key = normalizeStatus(rawText);
+            const color = statusColors[key];
+            if (color) {
+                el.style.backgroundColor = color;
+                el.style.color = '#000'; // dark text for contrast
                 el.style.border = 'none';
-                el.style.fontWeight = '600';
-                el.style.borderRadius = '12px';
-                el.style.padding = '3px 10px';
-                el.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-                el.style.fontFamily = '';
-            }
-        });
-
-        document.querySelectorAll('div._4cvr1h6o._1e0c1bgi').forEach(el => {
-            const statusText = el.childNodes[0]?.nodeValue?.trim();
-            const style = statusColors[statusText];
-            if (style) {
-                el.style.display = 'block';
-                el.style.width = '100%';
-                el.style.height = '100%';
-                el.style.boxSizing = 'border-box';
-                el.style.backgroundColor = style.bg;
-                el.style.color = style.text;
+                el.style.padding = '2px 6px';
                 el.style.borderRadius = '4px';
-                el.style.padding = '3px 10px';
-                el.style.fontWeight = '600';
-                el.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-                const parentButton = el.closest('button');
-                if (parentButton) parentButton.style.setProperty('background', 'transparent', 'important');
+                el.style.transition = 'background-color 0.3s ease';
             }
+            el.querySelectorAll('span').forEach(span => {
+                span.style.background = 'transparent';
+            });
         });
     }
 
@@ -217,13 +196,13 @@
     }
 
     /*********** INITIAL RUN + OBSERVERS ***********/
-    styleStatuses();
+    applyColors();
     createPatcherField();
     highlightEditor();
     removeSignatureFromInternalNote();
 
     const observer = new MutationObserver(() => {
-        styleStatuses();
+        applyColors();
         createPatcherField();
         highlightEditor();
         attachButtonListeners();
