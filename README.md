@@ -42,7 +42,7 @@ This userscript adds quality of life updates to Jira interface for Customer Supp
 
 ## Installation
 
-1. Install a userscript manager like [Tampermonkey](https://www.tampermonkey.net/):
+1. Install a userscript manager like TamperMonkey:
 - chrome: https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en
 - firefox: https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/
 2. Create a new userscript and paste the code from `Jira for CSEs.user.js`.  
