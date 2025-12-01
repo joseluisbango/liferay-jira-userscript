@@ -30,6 +30,9 @@ This userscript adds quality of life updates to Jira interface for Customer Supp
 - Highlights the editor **yellow** when writing internal notes.
 <img width="1023" height="319" alt="image" src="https://github.com/user-attachments/assets/e71499ec-f1cd-476d-ba06-19a1b1b95bc6" />
 
+### 3. Customer Portal Links
+- Automatically adds a link to the **Customer Portal** in the details field.
+
 ---
 
 ## Installation

@@ -10,10 +10,11 @@
 // @downloadURL  https://github.com/AllyMech14/liferay-jira-userscript/raw/refs/heads/main/userscript.js
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        unsafeWindow
 // @grant        GM_registerMenuCommand
 // ==/UserScript==
 
-(function() {
+(async function() {
     'use strict';
 
     // Map of colors by normalized status (all lowercase, spaces removed)
@@ -113,11 +114,128 @@
 
         originalField.parentNode.insertBefore(clone, originalField.nextSibling);
     }
+    /*********** CUSTOMER PORTAL LINK FIELD ***********/
 
+    // Get Ticket ID from the URL
+    function getIssueKey() {
+        const url = window.location.href;
+        const match = url.match(/[A-Z]+-\d+/g);
+        if (!match || match.length === 0) {
+            console.error('Could not extract issue key from URL');
+            return null;
+        }
+        // Return the last match in case multiple keys are present
+        return match[match.length - 1];
+    }
 
-    /*********** INTERNAL NOTE HIGHLIGHT ***********/ 
-    //written by @allymech14
-    
+    // Fetch customfield_12557 to get workspaceId and objectId
+    //Limitation: this only works if the ticket has the Organization Asset
+    async function fetchAssetInfo(issueKey) {
+        const apiUrl = `/rest/api/3/issue/${issueKey}?fields=customfield_12557`;
+        try {
+            const res = await fetch(apiUrl);
+            if (!res.ok) throw new Error(`API failed: ${res.status}`);
+            const data = await res.json();
+            const field = data.fields.customfield_12557?.[0];
+            if (!field) {
+                console.warn('customfield_12557 missing or empty');
+                return null;
+            }
+            return {
+                workspaceId: field.workspaceId,
+                objectId: field.objectId
+            };
+        } catch (err) {
+            console.error('Error fetching customfield_12557:', err);
+            return null;
+        }
+    }
+
+    // Fetch object from gateway API and extract External Key
+    async function fetchExternalKey(workspaceId, objectId) {
+        const url = `/gateway/api/jsm/assets/workspace/${workspaceId}/v1/object/${objectId}?includeExtendedInfo=false`;
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Gateway API failed: ${res.status}`);
+            const data = await res.json();
+
+            const extAttr = data.attributes.find(attr => attr.objectTypeAttribute.name === 'External Key');
+            if (!extAttr || !extAttr.objectAttributeValues.length) {
+                console.warn('External Key not found');
+                return null;
+            }
+            return extAttr.objectAttributeValues[0].value;
+        } catch (err) {
+            console.error('Error fetching object from gateway API:', err);
+            return null;
+        }
+    }
+
+    // Build the customer portal URL
+    function getCustomerPortalHref(externalKey) {
+        if (!externalKey) return null;
+        const url = `https://support.liferay.com/project/#/${externalKey}`;
+        return url;
+    }
+
+    // Main function to create and insert the field
+    async function createCustomerPortalField() {
+        const originalField = document.querySelector('[data-component-selector="jira-issue-field-heading-field-wrapper"]');
+        if (!originalField) return;
+        if (document.querySelector('.customer-portal-link-field')) return;
+
+        const clone = originalField.cloneNode(true);
+
+        // Remove duplicated "Assign to Me"
+        const assignToMe = clone.querySelector('[data-testid="issue-view-layout-assignee-field.ui.assign-to-me"]');
+        if(assignToMe) assignToMe.remove();
+
+        clone.classList.add('customer-portal-link-field');
+
+        // Fetch issue info and external key info 
+        // Uses unsafeWindow to cache the fetched data globally, so it can be reused if the function is called again
+        const issueKey = getIssueKey();
+        if (!issueKey) return;
+
+        if (unsafeWindow.issueKey !== issueKey) {
+            unsafeWindow.issueKey = issueKey;
+            unsafeWindow.assetInfo = undefined;
+            unsafeWindow.externalKey = undefined;
+
+            unsafeWindow.assetInfo = await fetchAssetInfo(issueKey);
+            unsafeWindow.externalKey = await fetchExternalKey(unsafeWindow.assetInfo.workspaceId, unsafeWindow.assetInfo.objectId);
+        }
+
+        if (!unsafeWindow.assetInfo) return;
+        if (!unsafeWindow.externalKey) return;
+
+        const url = getCustomerPortalHref(unsafeWindow.externalKey);
+
+        // Update field heading
+        const heading = clone.querySelector('h3');
+        if (heading) heading.textContent = 'Customer Portal';
+
+        // Insert link
+        const contentContainer = clone.querySelector('[data-testid="issue-field-inline-edit-read-view-container.ui.container"]');
+        if (contentContainer) contentContainer.innerHTML = '';
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.textContent = unsafeWindow.externalKey;
+        link.style.display = 'block';
+        link.style.marginTop = '5px';
+        link.style.textDecoration = 'underline';
+
+        contentContainer && contentContainer.appendChild(link);
+
+        if (document.querySelector('.customer-portal-link-field')) return;
+
+        // Insert the cloned field after the original
+        originalField.parentNode.insertBefore(clone, originalField.nextSibling);
+    }
+    /*********** INTERNAL NOTE HIGHLIGHT ***********/
+
     function highlightEditor() {
         const editorWrapper = document.querySelector('.css-sox1a6');
         const editor = document.querySelector('#ak-editor-textarea');
@@ -177,18 +295,18 @@
         }
     }
 
-/* 
+/*
 ===============================================================================
-  OPTIONAL FEATURES 
+  OPTIONAL FEATURES
   1. Disable JIRA Shortcuts
   2. Open Tickets In a New Tab
 
-  How to Use: 
+  How to Use:
   1. Go to TamperMonkey Icon in the browser
   2. Enable/Disable Features
   3. Refresh Jira for changes to change affect
 
-  Note: The features are disabled by default. 
+  Note: The features are disabled by default.
 
 ===============================================================================
 */
@@ -202,7 +320,7 @@
         disableShortcuts: GM_getValue("disableShortcuts", DEFAULTS.disableShortcuts),
         bgTabOpen: GM_getValue("bgTabOpen", DEFAULTS.bgTabOpen),
     };
-    
+
     function registerMenu() {
         GM_registerMenuCommand(
             `Disable Jira Shortcuts: ${S.disableShortcuts ? "ON" : "OFF"}`,
@@ -256,20 +374,20 @@
     }
 
     /*********** INITIAL RUN + OBSERVERS ***********/
-    applyColors();
-    createPatcherField();
-    highlightEditor();
-    removeSignatureFromInternalNote();
+    async function updateUI() {
+        applyColors();
+        createPatcherField();
+        highlightEditor();
+        await createCustomerPortalField();
+        removeSignatureFromInternalNote();
+   }
+
+    await updateUI();
     registerMenu();
     disableShortcuts();
     backgroundTabLinks();
 
-    const observer = new MutationObserver(() => {
-        applyColors();
-        createPatcherField();
-        highlightEditor();
-        removeSignatureFromInternalNote();
-    });
+    const observer = new MutationObserver(updateUI);
     observer.observe(document.body, { childList: true, subtree: true });
 
 })();
