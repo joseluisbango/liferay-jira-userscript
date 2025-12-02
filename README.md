@@ -31,6 +31,10 @@ This userscript adds quality of life updates to Jira interface for Customer Supp
 - Highlights the editor yellow when writing internal notes.
 <img width="1023" height="319" alt="image" src="https://github.com/user-attachments/assets/e71499ec-f1cd-476d-ba06-19a1b1b95bc6" />
 
+### 4. Customer Portal Link
+- Automatically adds a Customer portal link in the details field. 
+<img width="1023" height="319" alt="image" src="https://github.com/user-attachments/assets/e71499ec-f1cd-476d-ba06-19a1b1b95bc6" />
+
 
 ## Optional Features can be toggled on or off using the userscript menu accessible via your userscript manager
 - **Disable Jira Shortcuts**: Prevents Jira’s keyboard shortcuts from triggering while typing.  
