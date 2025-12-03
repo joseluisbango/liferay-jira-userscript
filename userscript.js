@@ -62,6 +62,12 @@
         });
     }
 
+    function getTicketType() {
+        const title = document.title;
+        const match = title.match(/\[([A-Z]+)-\d+\]/);
+        return match ? match[1] : null;
+    }
+
     /*********** PATCHER LINK FIELD ***********/
     function getPatcherPortalAccountsHREF(path, params) {
         const portletId = '1_WAR_osbpatcherportlet';
@@ -78,6 +84,9 @@
     }
 
     function createPatcherField() {
+        const ticketType = getTicketType();
+        if (!['LRHC','LRFLS'].includes(ticketType)) return; // Only run for allowed types
+
         const originalField = document.querySelector('[data-component-selector="jira-issue-field-heading-field-wrapper"]');
         if (!originalField) return;
         if (document.querySelector('.patcher-link-field')) return;
@@ -217,6 +226,9 @@
 
     // 6. Main function to create and insert the field (handles UI updates only)
     async function createCustomerPortalField() {
+        const ticketType = getTicketType();
+        if (!['LRHC','LRFLS'].includes(ticketType)) return; // Only run for allowed types
+
         const originalField = document.querySelector('[data-component-selector="jira-issue-field-heading-field-wrapper"]');
         if (!originalField || document.querySelector('.customer-portal-link-field')) return;
 
