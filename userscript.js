@@ -3,7 +3,7 @@
 // @author       Ally, Rita, Dmcisneros
 // @icon         https://www.liferay.com/o/classic-theme/images/favicon.ico
 // @namespace    https://liferay.atlassian.net/
-// @version      3.5
+// @version      3.6
 // @description  Jira statuses + Patcher, Account tickets and CP Link field + Internal Note highlight
 // @match        https://liferay.atlassian.net/*
 // @updateURL    https://github.com/AllyMech14/liferay-jira-userscript/raw/refs/heads/main/userscript.js
@@ -447,6 +447,48 @@
         }
     }
 
+    /*********** NEW FEATURE: HIGH PRIORITY FLAME ICON ***********/
+    function addFlameIconToHighPriority() {
+        // Selector for the specific High Priority image URLs
+        const highPrioritySelectors = [
+            'img[src*="high_new.svg"]', // Matches the first URL
+            'img[src*="avatar/10635"]'  // Matches the second URL
+        ].join(', ');
+
+        const highPriorityIcons = document.querySelectorAll(highPrioritySelectors);
+
+        highPriorityIcons.forEach(icon => {
+            // Check if the flame icon has already been added to avoid duplicates
+            if (icon.closest('.flame-icon-wrapper')) {
+                return; 
+            }
+            
+            // Create the flame icon element
+            const flameIcon = document.createElement('span');
+            flameIcon.textContent = '🔥'; // The flame emoji
+            flameIcon.style.cssText = 'font-size: 16px; margin-left: 5px; vertical-align: middle; display: inline-block;';
+
+            // Wrap the original icon and the new flame icon in a container
+            const wrapper = document.createElement('span');
+            wrapper.classList.add('flame-icon-wrapper');
+            wrapper.style.display = 'inline-flex';
+            wrapper.style.alignItems = 'center';
+
+            // Check if the icon is already wrapped, and if so, unwrap it first 
+            // to place the new wrapper correctly (optional defensive coding)
+            const parent = icon.parentNode;
+            
+            // Move the original icon into the wrapper
+            wrapper.appendChild(icon.cloneNode(true)); // Clone the icon to move it
+            
+            // Add the flame icon to the wrapper
+            wrapper.appendChild(flameIcon);
+
+            // Replace the original icon with the new wrapper
+            parent.replaceChild(wrapper, icon); 
+        });
+    }
+
     /*
       OPTIONAL FEATURES
       1. Disable JIRA Shortcuts
@@ -532,6 +574,7 @@
         highlightEditor();
         await createCustomerPortalField();
         removeSignatureFromInternalNote();
+        addFlameIconToHighPriority();
     }
 
     await updateUI();
