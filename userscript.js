@@ -409,6 +409,7 @@
         } else {
             //If not internal note Remove highlight
             if (editorWrapper) {
+                editorWrapper.style.removeProperty('color');
                 editorWrapper.style.removeProperty('background-color');
                 editorWrapper.style.removeProperty('border');
             }
@@ -419,34 +420,58 @@
     }
     /*********** INTERNAL NOTE - REMOVE SIGNATURE ***********/
 
-    // Select the "Add internal note" button
-    function removeSignatureFromInternalNote() {
-        const addNoteButton = document.querySelector('button.css-yfvug5');
+    function setupInternalNoteListener() {
+        console.log("Escuchador de notas internas activado...");
 
-        if (addNoteButton) {
-            addNoteButton.addEventListener('click', () => {
-                // Create a MutationObserver to watch for the target paragraph appearing
-                const observer = new MutationObserver((mutations, obs) => {
-                    const targetParagraph = document.querySelector(
-                        'p[data-prosemirror-node-name="paragraph"][data-prosemirror-node-block="true"]'
-                    );
+        document.addEventListener('click', (event) => {
+            // Detectamos el clic en el botón por clase o por texto
+            const isButton = event.target.closest('button.css-14d62gv') ||
+                  (event.target.innerText && event.target.innerText.includes('Add internal note'));
 
-                    if (targetParagraph && targetParagraph.innerHTML.includes('Best regards')) {
-                        // Remove the paragraph
-                        targetParagraph.remove();
+            if (isButton) {
+                console.log('Botón pulsado, vigilando aparición del editor...');
+
+                let attempts = 0;
+                const maxAttempts = 20; // Reintentar durante ~4 segundos
+
+                const checkAndRemove = setInterval(() => {
+                    // Buscamos el editor específico que me pasaste
+                    const editor = document.getElementById('ak-editor-textarea');
+
+                    if (editor) {
+                        // Buscamos todos los párrafos dentro del editor
+                        const paragraphs = editor.querySelectorAll('p[data-prosemirror-node-name="paragraph"]');
+                        let found = false;
+
+                        paragraphs.forEach(p => {
+                            // Comprobamos si contiene "Saludos cordiales" o "Best regards"
+                            if (p.innerText.includes('Saludos cordiales') || p.innerText.includes('Best regards')) {
+                                p.remove();
+                                found = true;
+                            }
+                            // También removemos el nombre si queda suelto (opcional)
+                            if (p.innerText.trim() === 'Daniel') {
+                                p.remove();
+                            }
+                        });
+
+                        if (found) {
+                            console.log('Firma eliminada del editor.');
+                            clearInterval(checkAndRemove);
+                        }
                     }
-                });
 
-                // Observe the whole document (you can narrow to a specific container if you know it)
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true,
-                });
-            });
-        } else {
-            console.warn('Add internal note button not found.');
-        }
+                    attempts++;
+                    if (attempts >= maxAttempts) {
+                        clearInterval(checkAndRemove);
+                    }
+                }, 200); // Revisa cada 200ms
+            }
+
+
+        });
     }
+
 
     /*********** NEW FEATURE: HIGH PRIORITY FLAME ICON ***********/
     function addFlameIconToHighPriority() {
@@ -544,6 +569,8 @@
         const targetDiv = document.querySelector(divSelector);
     
         if (targetDiv) {
+            targetDiv.style.whiteSpace = 'pre-wrap';
+
             const originalText = targetDiv.textContent;
             const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
     
@@ -644,15 +671,18 @@
         createJiraFilterLinkField();
         highlightEditor();
         await createCustomerPortalField();
-       // removeSignatureFromInternalNote();
         addFlameIconToHighPriority();
         expandCCCInfo();
     }
 
     await updateUI();
+    setupInternalNoteListener();
     registerMenu();
     disableShortcuts();
     backgroundTabLinks();
+
+
+
 
     const observer = new MutationObserver(updateUI);
     observer.observe(document.body, { childList: true, subtree: true });
