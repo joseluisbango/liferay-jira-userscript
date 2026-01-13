@@ -1,6 +1,6 @@
 # Jira for CSEs – Userscript
 
-**Version:** 3.9
+**Version:** 3.10
 **Author:** Allison McGill, Rita Schaff, Daniel Martínez Cisneros
 
 ---
@@ -14,6 +14,7 @@ This userscript adds quality of life updates to Jira interface for Customer Supp
 3. Highlighting the editor when writing internal notes for quick visual distinction.
 4. Inserting a Link to Customer Portal in the ticket details.
 5. Optional Features controlled by Toggles (via the user script menu)
+6. Colorize solution proposed section
 
 ---
 
@@ -45,6 +46,10 @@ This userscript adds quality of life updates to Jira interface for Customer Supp
 - Automatically adds internal notes in the details field. 
 <img width="546" height="797" alt="image" src="https://github.com/user-attachments/assets/d004ded0-3abd-4c6f-ad72-6fca5693da64" />
 
+
+### 7. Colorize solution proposed
+- Automatically add color to solution proposed section. 
+<img width="1399" height="603" alt="image" src="https://github.com/user-attachments/assets/8d947745-9a4b-4f7f-86ff-376cd066d9b2" />
 
 
 
